@@ -70,7 +70,7 @@ them as a delete.
 
 ### entitydb(namespace, [options])
 
-Creates a new database instance.
+Creates and returns a new database instance.
 
 #### namespace
 
@@ -81,7 +81,7 @@ avoid accidental key collisions.
 
 ---
 
-### db.write(entitiy, [options], cb)
+### db.write(entity, [options], cb)
 
 Write an entity to the log.
 
@@ -103,14 +103,22 @@ Complete a sequence of write operations.
 
 Read sequentially from the database.
 
+Options maybe include `type` and `id`. These are indexed.
+
 ---
 
 ### db.on("change")
 
-Emitted when any entity is updated.
+Emitted when any entity is written/updated.
+
+---
+
+### db.on("change:{type}")
+
+Emitted when any entity of `type` is written/updated.
 
 ---
 
 ### db.on("change:{type},{id}")
 
-Emitted when the value with `{type}` and `{id}` is updated.
+Emitted when the entity with `id` of `type` is written/updated.
