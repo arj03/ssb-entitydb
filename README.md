@@ -36,7 +36,9 @@ Metadata: Dictionary of system specific metadata such as a list of
 latest sequence number for nodes, an application specific which could
 include things such as timestamps and usernames. Please note that
 these application specific attributes are only used for debugging, as
-opposed to system specific.
+opposed to system specific. Sequence number of nodes should only
+include the nodes participating in the name space. And should prune
+old inactive nodes.
 
 Values: For values we differentiate between write mode and read modes.
 Write can never have conflicts as they are local and as such is just a
