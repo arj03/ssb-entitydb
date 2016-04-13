@@ -5,10 +5,10 @@ An entity database for [Scuttlebot applications](https://github.com/ssbc/scuttle
 ## About
 
 This interface lets you focus on writing applications, instead of
-working with the SSB log. The entities can be written or changes by
-any node, and then replicated on the mesh network. It works just like
-any Eventually-Consistent database (CouchDB, or Riak), but it's global
-and p2p.
+working with the SSB log. The entities can be written or changed by
+any node, and these are replicated on the mesh network. It works just
+like any eventually consistent database (CouchDB, or Riak), but it's
+global and p2p.
 
 The database consists of two modes. A write mode in which values are
 appended to the local database. And a reader mode which reads all logs
@@ -21,7 +21,7 @@ Multiple users may update the database without locking.
 
 If two users update a value at the same time, then both values will be kept.
 This is technically a "conflict", though you may wish to keep all values.
-You can resolve the conflict by writing a new value.
+Anyone can resolve the conflict by writing a new value.
 
 #### Entities
 
@@ -37,7 +37,7 @@ latest sequence number for nodes, an application specific which could
 include things such as timestamps and usernames. Please note that
 these application specific attributes are only used for debugging, as
 opposed to system specific. Sequence number of nodes should only
-include the nodes participating in the name space. And should prune
+include the nodes participating in the namespace. And should prune
 old inactive nodes.
 
 Values: For values we differentiate between write mode and read modes.
@@ -58,17 +58,18 @@ them as a delete.
 
 ## API
 
- - `entitydb()`
+ - `entityDB()`
  - `db.write()`
+ - `db.writeAll()`
  - `db.get()`
- - `db.batch()`
+ - `db.getAll()`
  - `db.createReadStream()`
  - `db.on("change")`
  - `db.on("change:<type>,<id>")`
 
 ---
 
-### entitydb(namespace, [options])
+### entityDB(namespace, [options])
 
 Creates and returns a new database instance.
 
@@ -81,21 +82,29 @@ avoid accidental key collisions.
 
 ---
 
-### db.write(entity, [options], cb)
+### db.write(type, id, values, metadata, cb)
 
 Write an entity to the log.
 
 ---
 
-### db.get(type, id, [options], cb)
+### db.writeAll(array, [options], cb)
 
-Get the entity with a given type and id.
+Complete a sequence of write operations. Array must consist of objects
+with `type`, `id`, `type` and optional `metadata`.
 
 ---
 
-### db.batch(array, [options], cb)
+### db.get(type, id, [options], cb)
 
-Complete a sequence of write operations.
+Gets the latest version of an entity with a given type and id.
+
+---
+
+### db.getAll(type, id, [options], cb)
+
+Gets all versions of an entity with a given type and id. Please note
+this returns an object with values and metadata as opposed to get.
 
 ---
 
