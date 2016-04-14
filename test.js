@@ -1,11 +1,31 @@
 #!/usr/bin/env node
 
+var pull = require('pull-stream');
+var through = require('pull-through');
+
 var lib = require('./entitydb.js');
 
 require('ssb-client')((err, sbot) => {
     if (err) throw err;
 
-    var db = lib.entityDB("test", sbot);
+    lib.entityDB("test", sbot, db => {
+
+        pull(
+            //db.onChange(),
+            //db.onTypeChange("t"),
+            db.onEntityChange("t", 1),
+            through(data => {
+                console.log("got data change", data);
+            }),
+            pull.log() // don't swallow console.log
+        );
+
+        db.write("t", 1, {b:3, c:1}, null, () => {
+            console.log("done");
+        });
+    });
+
+    return;
 
     console.time("add");
 

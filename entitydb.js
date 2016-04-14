@@ -1,30 +1,58 @@
 var pull = require('pull-stream');
+var through = require('pull-through');
 
 var self = module.exports = {
 
-    state: {
+    getType: function(type)
+    {
+        return 'entity:' + self.namespace + ":" + type;
     },
 
     sbot: null,
+    myId: "",
+    latestTimestamp: 0,
+    latestSeq: "",
     namespace: "",
     serverMetadata: {}, // FIXME
 
-    entityDB: function(namespace, sbot, options)
+    entityDB: function(namespace, sbot, cb)
     {
         if (!namespace) throw "Missing namespace";
         if (!sbot) throw "Missing sbot";
 
         self.namespace = namespace;
         self.sbot = sbot;
-        return self;
+        sbot.whoami((err, info) => {
+            if (err) throw err;
+
+            self.myId = info.id;
+
+            self.sbot.latestSequence(self.myId, (err, info) => {
+                self.latestTimestamp = info.ts;
+                self.latestSeq = info.sequence;
+
+                console.log("latest seq: " + self.latestSeq);
+
+                pull(
+                    self.onChange(),
+                    through(data => {
+                        self.latestTimestamp = data.value.timestamp;
+                        self.latestSeq = data.value.sequence;
+                        console.log("latest seq: " + self.latestSeq);
+                    }),
+                    pull.log() // don't swallow console.log
+                );
+
+                cb(self);
+            });
+        });
     },
 
     write: function(type, id, values, metadata, cb)
     {
         var mergedMetadata = Object.assign(self.serverMetadata, metadata);
 
-        self.sbot.publish({ type: 'entity:' + self.namespace + ":" + type,
-                            id: id, metadata: mergedMetadata, values: values }, cb);
+        self.sbot.publish({ type: self.getType(type), id: id, metadata: mergedMetadata, values: values }, cb);
     },
 
     writeAll: function(array, cb)
@@ -46,7 +74,7 @@ var self = module.exports = {
     get: function(type, id, cb)
     {
         pull(
-            self.sbot.messagesByType({ type: 'entity:' + self.namespace + ":" + type, fillCache: true, keys: false }),
+            self.sbot.messagesByType({ type: self.getType(type), fillCache: true, keys: false }),
             pull.collect((err, log) => {
                 if (err) throw err;
 
@@ -62,29 +90,35 @@ var self = module.exports = {
         );
     },
 
-    getAll: function(type, id, cb)
+    getAllById: function(type, id)
     {
-        pull(
-            self.sbot.messagesByType({ type: 'entity:' + self.namespace + ":" + type, fillCache: true, keys: false }),
-            pull.collect((err, log) => {
-                if (err) throw err;
+        return pull(
+            self.getAll(type),
+            pull.filter(data => data.content.id == id)
+        );
+    },
 
-                var values = [];
+    getAll: function(type)
+    {
+        return self.sbot.messagesByType({ type: self.getType(type), fillCache: true, keys: false });
+    },
 
-                log.forEach(msg => {
-                    if (msg.content.id == id)
-                        values.push(msg.content);
-                });
+    onChange()
+    {
+        return self.sbot.createHistoryStream({ live: true, id: self.myId, seq: self.latestSeq + 1 });
+    },
 
-                cb(values);
-            })
+    onTypeChange(type)
+    {
+        return self.sbot.messagesByType({ live: true, type: self.getType(type), gt: self.latestTimestamp,
+                                          fillCache: true, keys: false });
+    },
+
+    onEntityChange(type, id)
+    {
+        return pull(
+            self.onTypeChange(type),
+            pull.filter(data => data.content.id == id)
         );
     }
-
-    /*
-    createReadStream([options])
-    on("change")
-    on("change:{type}")
-    on("change:{type},{id}")
-    */
 };

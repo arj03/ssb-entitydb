@@ -62,10 +62,11 @@ them as a delete.
  - `db.write()`
  - `db.writeAll()`
  - `db.get()`
+ - `db.getAllById()`
  - `db.getAll()`
- - `db.createReadStream()`
- - `db.on("change")`
- - `db.on("change:<type>,<id>")`
+ - `db.onChange()`
+ - `db.onTypeChange()`
+ - `db.onEntityChange()`
 
 ---
 
@@ -95,39 +96,39 @@ with `type`, `id`, `type` and optional `metadata`.
 
 ---
 
-### db.get(type, id, [options], cb)
+### db.get(type, id, cb)
 
-Gets the latest version of an entity with a given type and id.
-
----
-
-### db.getAll(type, id, [options], cb)
-
-Gets all versions of an entity with a given type and id. Please note
-this returns an object with values and metadata as opposed to get.
+Gets the latest version (values) of an entity with a given `type` and
+`id`.
 
 ---
 
-### db.createReadStream([options])
+### db.getAllById(type, id)
 
-Read sequentially from the database.
-
-Options maybe include `type` and `id`. These are indexed.
-
----
-
-### db.on("change")
-
-Emitted when any entity is written/updated.
+Streams all versions of an entity with a given `type` and `id`. Please note
+this returns objects with values and metadata as opposed to get which
+only returns values.
 
 ---
 
-### db.on("change:{type}")
+### db.getAll(type)
 
-Emitted when any entity of `type` is written/updated.
+Returns as stream of sequential messages of a given `type` from the database.
 
 ---
 
-### db.on("change:{type},{id}")
+### db.onChange()
 
-Emitted when the entity with `id` of `type` is written/updated.
+Returns a stream of changes on all types.
+
+---
+
+### db.onTypeChange(type)
+
+Returns a stream of changes on specific `type`
+
+---
+
+### db.onEntityChange(type, id)
+
+Returns a stream of changes on specific `id` with `type`.
