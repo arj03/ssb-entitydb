@@ -89,7 +89,7 @@ Write an entity to the log.
 
 ---
 
-### db.writeAll(array, [options], cb)
+### db.writeAll(array, cb)
 
 Complete a sequence of write operations. Array must consist of objects
 with `type`, `id`, `type` and optional `metadata`.
