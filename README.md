@@ -119,7 +119,9 @@ Returns as stream of sequential messages of a given `type` from the database.
 
 ### db.onChange()
 
-Returns a stream of changes on all types.
+Returns a stream of changes on all types. Please note these changes
+consists of keys as well as values, which is different from the
+onTypeChange, onEntityChange.
 
 ---
 

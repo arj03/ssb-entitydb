@@ -11,7 +11,7 @@ var self = module.exports = {
     sbot: null,
     myId: "",
     latestTimestamp: 0,
-    latestSeq: "",
+    latestSeq: 0,
     namespace: "",
     serverMetadata: {}, // FIXME
 
@@ -28,10 +28,12 @@ var self = module.exports = {
             self.myId = info.id;
 
             self.sbot.latestSequence(self.myId, (err, info) => {
-                self.latestTimestamp = info.ts;
-                self.latestSeq = info.sequence;
+                if (info != undefined) { // empty db
+                    self.latestTimestamp = info.ts;
+                    self.latestSeq = info.sequence;
 
-                console.log("latest seq: " + self.latestSeq);
+                    console.log("latest seq: " + self.latestSeq);
+                }
 
                 pull(
                     self.onChange(),
