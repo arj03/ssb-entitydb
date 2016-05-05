@@ -1,5 +1,6 @@
 var pull = require('pull-stream');
 var through = require('pull-through');
+var multicb = require('multicb');
 
 var self = module.exports = {
 
@@ -65,18 +66,13 @@ var self = module.exports = {
 
     writeAll: function(array, cb)
     {
-        var running = []; // FIXME: use multicb
+        var done = multicb();
 
         array.forEach(entity => {
-            running.push(entity);
-            self.write(entity.type, entity.id, entity.values, entity.metadata, err => {
-                if (err) throw err;
-
-                running.pop();
-                if (running.length == 0)
-                    cb();
-            });
+            self.write(entity.type, entity.id, entity.values, entity.metadata, done());
         });
+
+        done(cb);
     },
 
     get: function(type, id, cb)
