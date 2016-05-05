@@ -13,7 +13,7 @@ var self = module.exports = {
     latestTimestamp: 0,
     latestSeq: 0,
     namespace: "",
-    serverMetadata: {}, // FIXME
+    serverMetadata: {},
 
     entityDB: function(namespace, sbot, cb)
     {
@@ -32,7 +32,7 @@ var self = module.exports = {
                     self.latestTimestamp = info.ts;
                     self.latestSeq = info.sequence;
 
-                    console.log("latest seq: " + self.latestSeq);
+                    console.log(self.myId + ", latest seq: " + self.latestSeq);
                 }
 
                 pull(
@@ -40,7 +40,13 @@ var self = module.exports = {
                     through(data => {
                         self.latestTimestamp = data.value.timestamp;
                         self.latestSeq = data.value.sequence;
-                        console.log("latest seq: " + self.latestSeq);
+                        console.log(self.myId + ", latest seq: " + self.latestSeq);
+                        if (data.value.content.type.indexOf("entity:" + self.namespace) != -1 &&
+                            data.author != self.myId)
+                        {
+                            // we got a message from another node, update metadata
+                            self.serverMetadata[data.author] = data.sequence;
+                        }
                     }),
                     pull.log() // don't swallow console.log
                 );
@@ -59,7 +65,7 @@ var self = module.exports = {
 
     writeAll: function(array, cb)
     {
-        var running = [];
+        var running = []; // FIXME: use multicb
 
         array.forEach(entity => {
             running.push(entity);
@@ -83,7 +89,7 @@ var self = module.exports = {
                 var entity = {};
 
                 log.forEach(msg => {
-                    if (msg.content.id == id)
+                    if (msg.content.id == id) // FIXME: handle conflicts using metadata
                         entity = Object.assign(entity, msg.content.values);
                 });
 
@@ -105,11 +111,14 @@ var self = module.exports = {
         return self.sbot.messagesByType({ type: self.getType(type), fillCache: true, keys: false });
     },
 
+    // FIXME: doesn't filter on namespace...
+    // Fine when used in constructor, but not for external users
     onChange()
     {
         return self.sbot.createHistoryStream({ live: true, id: self.myId, seq: self.latestSeq + 1 });
     },
 
+    // FIXME: for the next two functions, we get all changes, not only our own
     onTypeChange(type)
     {
         return self.sbot.messagesByType({ live: true, type: self.getType(type), gt: self.latestTimestamp,
