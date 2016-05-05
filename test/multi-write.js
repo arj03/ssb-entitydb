@@ -51,7 +51,7 @@ tape('multi-write', function (t) {
     console.log("alice is: " + alice.id);
     console.log("bob is: " + bob.id);
 
-    t.test('alice and bob follow eachother', function (t) {
+    t.test('alice and bob follow each other', function (t) {
         t.plan(1);
         var done = multicb();
         pub.publish(u.follow(alice.id), done());
@@ -71,7 +71,7 @@ tape('multi-write', function (t) {
             aliceDB = adb;
             lib.entityDB("test", bob, bdb => {
                 bobDB = bdb;
-                adb.write("t", 1, {a:0, b:1}, null, () => {
+                aliceDB.write("t", 1, {a:0, b:1}, null, () => {
                     awaitGossip(bob, alice, () => {
                         pull(
                             bob.messagesByType({ type: "entity:test:t", fillCache: true, keys: false }),
@@ -86,6 +86,7 @@ tape('multi-write', function (t) {
         });
     });
 
+    // non-conflict write
     t.test('bob updates alices entity', function (t) {
         bobDB.write("t", 1, {a:1, b:1}, null, () => {
             awaitGossip(alice, bob, () => {

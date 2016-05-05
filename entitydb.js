@@ -78,18 +78,45 @@ var self = module.exports = {
     get: function(type, id, cb)
     {
         pull(
-            self.sbot.messagesByType({ type: self.getType(type), fillCache: true, keys: false }),
+            self.getAllById(type, id),
             pull.collect((err, log) => {
                 if (err) throw err;
 
-                var entity = {};
+                var entity = [];
 
                 log.forEach(msg => {
-                    if (msg.content.id == id) // FIXME: handle conflicts using metadata
-                        entity = Object.assign(entity, msg.content.values);
+                    if (entity.length == 0)
+                    {
+                        entity.push({ node: msg.author,
+                                      sequence: msg.sequence,
+                                      values: msg.content.values });
+                    }
+                    else if (entity.length == 1 && entity[0].node == msg.author)
+                    {
+                        entity[0].sequence = msg.sequence;
+                        entity[0].values = msg.content.values;
+                    }
+                    else // potential conflicts
+                    {
+                        var allGood = true;
+                        entity.forEach(e => {
+                            if (msg.content.metadata[e.node] != e.sequence)
+                                allGood = false;
+                        });
+
+                        if (allGood)
+                            entity.clear();
+
+                        entity.push({ node: msg.author,
+                                      sequence: msg.sequence,
+                                      values: msg.content.values });
+                    }
                 });
 
-                cb(entity);
+                if (entity.length == 1)
+                    cb(entity[0].values);
+                else
+                    cb(entity);
             })
         );
     },

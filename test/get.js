@@ -22,7 +22,15 @@ tape('write', function (t) {
             db.get("t", 1, values => {
                 t.equal(values.b, 3, "Correct values stored");
                 t.equal(values.c, 1, "Correct values stored");
-                t.end();
+
+                db.write("t", 1, {a:1, c:3}, null, () => {
+                    db.get("t", 1, values => {
+                        t.equal(values.a, 1, "Correct values stored");
+                        t.equal(values.c, 3, "Correct values stored");
+                        t.equal(values.b, undefined, "Last writer wins");
+                        t.end();
+                    });
+                });
             });
             sbot.close();
         });

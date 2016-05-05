@@ -42,11 +42,12 @@ old inactive nodes.
 
 Values: For values we differentiate between write mode and read modes.
 Write can never have conflicts as they are local and as such is just a
-dictionary of attribute to value mappings. Read modes on the other
-hand potentially be in conflict if two nodes write to the same
-attribute without seeing each other changes (see metadata). In this
-case attribute values becomes a list of objects with the following
-attributes: { value: <v1>, node: <nodeid>, sequence: <node-sequence> }.
+dictionary of attribute to value mappings. One is expected to write
+all values every time, not just changes. Read modes on the other hand
+can potentially be in conflict if two nodes write to the same entity
+without seeing each other changes (see metadata). In this case values
+becomes a list of objects with the following attributes: { node:
+<nodeid>, sequence: <node-sequence>, values: <values> }.
 
 #### Deletes
 
