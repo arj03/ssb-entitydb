@@ -95,7 +95,7 @@ module.exports = {
                     {
                         var allGood = true;
                         entity.forEach(e => {
-                            if (msg.content.metadata[e.node] != e.sequence)
+                            if ((msg.content.metadata[e.node] || 0) < e.sequence)
                                 allGood = false;
                         });
 

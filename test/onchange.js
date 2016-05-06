@@ -21,12 +21,12 @@ tape('write', function (t) {
     var db = lib.entityDB("test", sbot);
 
     var done = multicb();
+    var value = {b:3, c:1};
 
     pull(
         db.onTypeChange("t"),
         through(data => {
-            t.equal(data.content.values.b, 3, "Got correct changes");
-            t.equal(data.content.values.c, 1, "Got correct changes");
+            t.deepEqual(data.content.values, value, "Got correct changes");
             done();
         }),
         pull.log() // don't swallow console.log
@@ -35,8 +35,7 @@ tape('write', function (t) {
     pull(
         db.onEntityChange("t", 1),
         through(data => {
-            t.equal(data.content.values.b, 3, "Got correct changes");
-            t.equal(data.content.values.c, 1, "Got correct changes");
+            t.deepEqual(data.content.values, value, "Got correct changes");
             done();
         }),
         pull.log() // don't swallow console.log
@@ -45,8 +44,7 @@ tape('write', function (t) {
     pull(
         db.onChange(),
         through(data => {
-            t.equal(data.value.content.values.b, 3, "Got correct changes");
-            t.equal(data.value.content.values.c, 1, "Got correct changes");
+            t.deepEqual(data.value.content.values, value, "Got correct changes");
             done();
         }),
         pull.log() // don't swallow console.log
@@ -54,7 +52,7 @@ tape('write', function (t) {
 
     done(() => t.end());
 
-    db.write("t", 1, {b:3, c:1}, null, () => {
+    db.write("t", 1, value, null, () => {
         sbot.close();
     });
 });

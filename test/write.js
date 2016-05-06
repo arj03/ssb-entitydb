@@ -22,7 +22,7 @@ tape('write', function (t) {
         pull(
             sbot.messagesByType({ type: "entity:test:t", fillCache: true, keys: false }),
             pull.collect((err, data) => {
-                t.equal(data.length, 1, "one message inserted into database");
+                t.deepEqual(data.content.values, {b:3, c:1}, "message correctly stored in database");
                 t.end();
             })
         );

@@ -71,7 +71,13 @@ tape('multi-write', function (t) {
         aliceDB.write("t", 1, aliceValue, null, () => {
             aliceDB.get("t", 1, entity => {
                 t.deepEqual(entity, aliceValue, "values stored correctly");
-                t.end();
+
+                aliceDB.write("t2", 1, aliceValue, null, () => {
+                    aliceDB.get("t2", 1, entity => {
+                        t.deepEqual(entity, aliceValue, "values stored correctly");
+                        t.end();
+                    });
+                });
             });
         });
     });
@@ -80,7 +86,13 @@ tape('multi-write', function (t) {
         bobDB.write("t", 1, bobValue, null, () => {
             bobDB.get("t", 1, entity => {
                 t.deepEqual(entity, bobValue, "values stored correctly");
-                t.end();
+
+                bobDB.write("t2", 1, bobValue, null, () => {
+                    bobDB.get("t2", 1, entity => {
+                        t.deepEqual(entity, bobValue, "values stored correctly");
+                        t.end();
+                    });
+                });
             });
         });
     });
@@ -107,20 +119,61 @@ tape('multi-write', function (t) {
         });
     });
 
+    function checkConflictingValues(entity)
+    {
+        t.equal(entity.length, 2, "2 versions available");
+
+        if (entity[0].node == alice.id)
+            t.deepEqual(entity[0].values, aliceValue);
+        else
+            t.deepEqual(entity[0].values, bobValue);
+
+        if (entity[1].node == alice.id)
+            t.deepEqual(entity[1].values, aliceValue);
+        else
+            t.deepEqual(entity[1].values, bobValue);
+    }
+
+    t.test('get conflicting values simple', function (t) {
+        awaitGossip(bob, alice, () => {
+            bobDB.get("t2", 1, entity => {
+
+                checkConflictingValues(entity);
+
+                console.log("bob v1: " + JSON.stringify(entity[0]));
+                console.log("bob v2: " + JSON.stringify(entity[1]));
+
+                awaitGossip(alice, bob, () => {
+                    aliceDB.get("t2", 1, entity => {
+
+                        checkConflictingValues(entity);
+
+                        console.log("alice v1: " + JSON.stringify(entity[0]));
+                        console.log("alice v2: " + JSON.stringify(entity[1]));
+
+                        aliceDB.write("t2", 1, charlieValue, null, () => {
+                            aliceDB.get("t2", 1, entity => {
+                                t.deepEqual(entity, charlieValue, "resolving a conflict");
+
+                                awaitGossip(bob, alice, () => {
+                                    bobDB.get("t2", 1, entity => {
+                                        t.deepEqual(entity, charlieValue, "simple bob agrees that conflict is resolved");
+                                        t.end();
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
     t.test('get conflicting values', function (t) {
         awaitGossip(bob, alice, () => {
             bobDB.get("t", 1, entity => {
-                t.equal(entity.length, 2, "2 versions available");
 
-                if (entity[0].node == alice.id)
-                    t.deepEqual(entity[0].values, aliceValue);
-                else
-                    t.deepEqual(entity[0].values, bobValue);
-
-                if (entity[1].node == alice.id)
-                    t.deepEqual(entity[1].values, aliceValue);
-                else
-                    t.deepEqual(entity[1].values, bobValue);
+                checkConflictingValues(entity);
 
                 console.log("bob v1: " + JSON.stringify(entity[0]));
                 console.log("bob v2: " + JSON.stringify(entity[1]));
@@ -128,19 +181,7 @@ tape('multi-write', function (t) {
                 awaitGossip(alice, bob, () => {
                     aliceDB.get("t", 1, entity => {
 
-                        console.log(entity);
-
-                        t.equal(entity.length, 2, "2 versions available");
-
-                        if (entity[0].node == alice.id)
-                            t.deepEqual(entity[0].values, aliceValue);
-                        else
-                            t.deepEqual(entity[0].values, bobValue);
-
-                        if (entity[1].node == alice.id)
-                            t.deepEqual(entity[1].values, aliceValue);
-                        else
-                            t.deepEqual(entity[1].values, bobValue);
+                        checkConflictingValues(entity);
 
                         console.log("alice v1: " + JSON.stringify(entity[0]));
                         console.log("alice v2: " + JSON.stringify(entity[1]));

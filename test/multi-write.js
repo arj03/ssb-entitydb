@@ -85,8 +85,7 @@ tape('multi-write', function (t) {
         bobDB.write("t", 1, {a:1, b:1}, null, () => {
             awaitGossip(alice, bob, () => {
                 aliceDB.get("t", 1, entity => {
-                    t.equal(entity.a, 1);
-                    t.equal(entity.b, 1);
+                    t.deepEqual(entity, {a:1, b:1});
                     t.end();
                 });
             });

@@ -24,8 +24,8 @@ tape('write', function (t) {
     db.writeAll(data, () => {
         pull(
             sbot.messagesByType({ type: "entity:test:t", fillCache: true, keys: false }),
-            pull.collect((err, data) => {
-               t.equal(data.length, 2, "two messages inserted into database");
+            pull.collect((err, dbData) => {
+                t.equal(dbData.length, 2, "two messages inserted into database");
                 t.end();
             })
         );
