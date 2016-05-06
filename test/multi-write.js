@@ -60,28 +60,22 @@ tape('multi-write', function (t) {
         bob.publish(u.follow(alice.id), done());
         done(function (err, res) {
             t.error(err, 'published follows');
-            console.log("done");
         });
     });
 
-    var aliceDB = null, bobDB = null;
+    var aliceDB = lib.entityDB("test", alice);
+    var bobDB = lib.entityDB("test", bob);
 
     t.test('alice writes an entity', function (t) {
-        lib.entityDB("test", alice, adb => {
-            aliceDB = adb;
-            lib.entityDB("test", bob, bdb => {
-                bobDB = bdb;
-                aliceDB.write("t", 1, {a:0, b:1}, null, () => {
-                    awaitGossip(bob, alice, () => {
-                        pull(
-                            bob.messagesByType({ type: "entity:test:t", fillCache: true, keys: false }),
-                            pull.collect((err, data) => {
-                                t.equal(data.length, 1, "one message inserted into database");
-                                t.end();
-                            })
-                        );
-                    });
-                });
+        aliceDB.write("t", 1, {a:0, b:1}, null, () => {
+            awaitGossip(bob, alice, () => {
+                pull(
+                    bob.messagesByType({ type: "entity:test:t", fillCache: true, keys: false }),
+                    pull.collect((err, data) => {
+                        t.equal(data.length, 1, "one message inserted into database");
+                        t.end();
+                    })
+                );
             });
         });
     });

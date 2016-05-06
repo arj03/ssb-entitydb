@@ -2,11 +2,11 @@ var pull = require('pull-stream');
 var through = require('pull-through');
 var multicb = require('multicb');
 
-var self = module.exports = {
+module.exports = {
 
     getType: function(type)
     {
-        return 'entity:' + self.namespace + ":" + type;
+        return 'entity:' + this.namespace + ":" + type;
     },
 
     sbot: null,
@@ -21,47 +21,42 @@ var self = module.exports = {
         if (!namespace) throw "Missing namespace";
         if (!sbot) throw "Missing sbot";
 
+        var self = Object.create(this);
+
         self.namespace = namespace;
         self.sbot = sbot;
-        sbot.whoami((err, info) => {
-            if (err) throw err;
+        self.myId = sbot.id;
 
-            self.myId = info.id;
+        pull(
+            self.sbot.createLogStream({ live: true }),
+            through(data => {
+                if (data.sync)
+                    return;
 
-            self.sbot.latestSequence(self.myId, (err, info) => {
-                if (info != undefined) { // empty db
-                    self.latestTimestamp = info.ts;
-                    self.latestSeq = info.sequence;
-
+                if (data.value.author == self.myId)
+                {
+                    self.latestTimestamp = data.value.timestamp;
+                    self.latestSeq = data.value.sequence;
                     console.log(self.myId + ", latest seq: " + self.latestSeq);
                 }
+                else if (data.value.content.type.indexOf("entity:" + self.namespace) != -1 &&
+                         data.value.author != self.myId)
+                {
+                    console.log(self.myId + ": updating metadata on ", data.value.author + ", seq: " + data.value.sequence);
+                    self.serverMetadata[data.value.author] = data.value.sequence;
+                }
+            }),
+            pull.log() // don't swallow console.log
+        );
 
-                pull(
-                    self.onChange(),
-                    through(data => {
-                        self.latestTimestamp = data.value.timestamp;
-                        self.latestSeq = data.value.sequence;
-                        console.log(self.myId + ", latest seq: " + self.latestSeq);
-                        if (data.value.content.type.indexOf("entity:" + self.namespace) != -1 &&
-                            data.author != self.myId)
-                        {
-                            // we got a message from another node, update metadata
-                            self.serverMetadata[data.author] = data.sequence;
-                        }
-                    }),
-                    pull.log() // don't swallow console.log
-                );
-
-                cb(self);
-            });
-        });
+        return self;
     },
 
     write: function(type, id, values, metadata, cb)
     {
-        var mergedMetadata = Object.assign(self.serverMetadata, metadata);
+        var mergedMetadata = Object.assign(this.serverMetadata, metadata);
 
-        self.sbot.publish({ type: self.getType(type), id: id, metadata: mergedMetadata, values: values }, cb);
+        this.sbot.publish({ type: this.getType(type), id: id, metadata: mergedMetadata, values: values }, cb);
     },
 
     writeAll: function(array, cb)
@@ -69,7 +64,7 @@ var self = module.exports = {
         var done = multicb();
 
         array.forEach(entity => {
-            self.write(entity.type, entity.id, entity.values, entity.metadata, done());
+            this.write(entity.type, entity.id, entity.values, entity.metadata, done());
         });
 
         done(cb);
@@ -78,7 +73,7 @@ var self = module.exports = {
     get: function(type, id, cb)
     {
         pull(
-            self.getAllById(type, id),
+            this.getAllById(type, id),
             pull.collect((err, log) => {
                 if (err) throw err;
 
@@ -105,7 +100,7 @@ var self = module.exports = {
                         });
 
                         if (allGood)
-                            entity.clear();
+                            entity = [];
 
                         entity.push({ node: msg.author,
                                       sequence: msg.sequence,
@@ -124,34 +119,33 @@ var self = module.exports = {
     getAllById: function(type, id)
     {
         return pull(
-            self.getAll(type),
+            this.getAll(type),
             pull.filter(data => data.content.id == id)
         );
     },
 
     getAll: function(type)
     {
-        return self.sbot.messagesByType({ type: self.getType(type), fillCache: true, keys: false });
+        return this.sbot.messagesByType({ type: this.getType(type), fillCache: true, keys: false });
     },
 
     // FIXME: doesn't filter on namespace...
-    // Fine when used in constructor, but not for external users
     onChange()
     {
-        return self.sbot.createHistoryStream({ live: true, id: self.myId, seq: self.latestSeq + 1 });
+        return this.sbot.createHistoryStream({ live: true, id: this.myId, seq: this.latestSeq + 1 });
     },
 
     // FIXME: for the next two functions, we get all changes, not only our own
     onTypeChange(type)
     {
-        return self.sbot.messagesByType({ live: true, type: self.getType(type), gt: self.latestTimestamp,
+        return this.sbot.messagesByType({ live: true, type: this.getType(type), gt: this.latestTimestamp,
                                           fillCache: true, keys: false });
     },
 
     onEntityChange(type, id)
     {
         return pull(
-            self.onTypeChange(type),
+            this.onTypeChange(type),
             pull.filter(data => data.content.id == id)
         );
     }

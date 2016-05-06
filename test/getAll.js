@@ -17,51 +17,51 @@ tape('write', function (t) {
         keys: keys
     });
 
-    lib.entityDB("test", sbot, db => {
-        db.writeAll([{ type: "t", id: 1, values: {b:3, c:1} },
-                     { type: "t", id: 1, values: {a:0, b:1} }], () => {
-            pull
-            (
-                db.getAll("t"),
-                pull.collect((err, data) => {
-                    t.equal(data.length, 2, "two messages inserted into database");
-                })
-            );
+    var db = lib.entityDB("test", sbot);
+    var data = [{ type: "t", id: 1, values: {b:3, c:1} },
+                { type: "t", id: 1, values: {a:0, b:1} }];
+    db.writeAll(data, () => {
+        pull
+        (
+            db.getAll("t"),
+            pull.collect((err, data) => {
+                t.equal(data.length, 2, "two messages inserted into database");
+            })
+        );
 
-            pull
-            (
-                db.getAll("t2"),
-                pull.collect((err, data) => {
-                    t.equal(data.length, 0, "namespaces work in getAll");
-                })
-            );
+        pull
+        (
+            db.getAll("t2"),
+            pull.collect((err, data) => {
+                t.equal(data.length, 0, "namespaces work in getAll");
+            })
+        );
 
-            pull
-            (
-                db.getAllById("t", 1),
-                pull.collect((err, data) => {
-                    t.equal(data.length, 2, "two messages with id 1 in database");
-                })
-            );
+        pull
+        (
+            db.getAllById("t", 1),
+            pull.collect((err, data) => {
+                t.equal(data.length, 2, "two messages with id 1 in database");
+            })
+        );
 
-            pull
-            (
-                db.getAllById("t", 2),
-                pull.collect((err, data) => {
-                    t.equal(data.length, 0, "no messages with id 2 in database");
-                })
-            );
+        pull
+        (
+            db.getAllById("t", 2),
+            pull.collect((err, data) => {
+                t.equal(data.length, 0, "no messages with id 2 in database");
+            })
+        );
 
-            pull
-            (
-                db.getAllById("t2", 1),
-                pull.collect((err, data) => {
-                    t.equal(data.length, 0, "namespaces work in getAllById");
-                    t.end();
-                })
-            );
+        pull
+        (
+            db.getAllById("t2", 1),
+            pull.collect((err, data) => {
+                t.equal(data.length, 0, "namespaces work in getAllById");
+                t.end();
+            })
+        );
 
-            sbot.close();
-        });
+        sbot.close();
     });
 });

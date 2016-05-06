@@ -17,17 +17,19 @@ tape('write', function (t) {
         keys: keys
     });
 
-    lib.entityDB("test", sbot, db => {
-        db.writeAll([{ type: "t", id: 1, values: {b:3, c:1} },
-                     { type: "t", id: 2, values: {a:0, b:1} }], () => {
-            pull(
-                sbot.messagesByType({ type: "entity:test:t", fillCache: true, keys: false }),
-                pull.collect((err, data) => {
-                    t.equal(data.length, 2, "two messages inserted into database");
-                    t.end();
-                })
-            );
-            sbot.close();
-        });
+    var db = lib.entityDB("test", sbot);
+    var data = [{ type: "t", id: 1, values: {b:3, c:1} },
+                { type: "t", id: 2, values: {a:0, b:1} }];
+
+    db.writeAll(data, () => {
+        pull(
+            sbot.messagesByType({ type: "entity:test:t", fillCache: true, keys: false }),
+            pull.collect((err, data) => {
+               t.equal(data.length, 2, "two messages inserted into database");
+                t.end();
+            })
+        );
+
+        sbot.close();
     });
 });
