@@ -13,7 +13,7 @@ tape('write', function (t) {
     var keys = ssbKeys.generate();
 
     var sbot = createSbot({
-        temp: 'test-entitydb-write',
+        temp: 'test-entitydb-getall',
         keys: keys
     });
 
