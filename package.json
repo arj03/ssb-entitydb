@@ -1,0 +1,32 @@
+{
+  "name": "ssb-entitydb",
+  "version": "1.0.0",
+  "description": "An entitity database Scuttlebot applications",
+  "main": "entitydb.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arj03/ssb-entitydb.git"
+  },
+  "keywords": [
+    "ssb",
+    "scuttlebot",
+    "db"
+  ],
+  "author": "Anders Rune Jensen <arj03@protonmail.ch>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/arj03/ssb-entitydb/issues"
+  },
+  "homepage": "https://github.com/arj03/ssb-entitydb",
+  "dependencies": {
+    "multicb": "^1.2.1",
+    "pull-stream": "^3.3.2",
+    "pull-through": "^1.0.18",
+    "scuttlebot": "^8.1.0",
+    "ssb-client": "^3.0.1",
+    "ssb-keys": "^5.0.1"
+  }
+}

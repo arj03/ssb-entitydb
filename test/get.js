@@ -26,9 +26,9 @@ tape('write', function (t) {
                 db.get("t", 1, values => {
                     t.deepEqual(values, {a:1, c:3}, "Correct values stored");
                     t.end();
+                    sbot.close();
                 });
             });
         });
-        sbot.close();
     });
 });

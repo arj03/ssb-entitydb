@@ -212,7 +212,6 @@ tape('multi-write', function (t) {
     });
 
     t.test('close the sbots', function (t) {
-        t.plan(4);
         pub.close(null, function (err) {
             t.error(err, 'closed pub');
         });
@@ -225,5 +224,6 @@ tape('multi-write', function (t) {
         charlie.close(null, function (err) {
             t.error(err, 'closed pub');
         });
+        t.end();
     });
 });

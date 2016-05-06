@@ -50,9 +50,10 @@ tape('write', function (t) {
         pull.log() // don't swallow console.log
     );
 
-    done(() => t.end());
-
-    db.write("t", 1, value, null, () => {
+    done(() => {
+        t.end();
         sbot.close();
     });
+
+    db.write("t", 1, value, null);
 });

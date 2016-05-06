@@ -59,9 +59,8 @@ tape('write', function (t) {
             pull.collect((err, data) => {
                 t.equal(data.length, 0, "namespaces work in getAllById");
                 t.end();
+                sbot.close();
             })
         );
-
-        sbot.close();
     });
 });

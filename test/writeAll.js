@@ -27,9 +27,8 @@ tape('write', function (t) {
             pull.collect((err, dbData) => {
                 t.equal(dbData.length, 2, "two messages inserted into database");
                 t.end();
+                sbot.close();
             })
         );
-
-        sbot.close();
     });
 });
