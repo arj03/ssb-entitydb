@@ -129,23 +129,43 @@ module.exports = {
         return this.sbot.messagesByType({ type: this.getType(type), fillCache: true, keys: false });
     },
 
-    // FIXME: doesn't filter on namespace...
     onChange()
     {
-        return this.sbot.createHistoryStream({ live: true, id: this.myId, seq: this.latestSeq + 1 });
+        return pull(
+            this.sbot.createHistoryStream({ live: true, id: this.myId, seq: this.latestSeq + 1 }),
+            pull.filter(data => data.value.content.type.indexOf("entity:" + this.namespace) != -1)
+        );
     },
 
-    // FIXME: for the next two functions, we get all changes, not only our own
-    onTypeChange(type)
+    onOwnTypeChange(type)
+    {
+        return pull(
+            this.sbot.createHistoryStream({ live: true, id: this.myId, seq: this.latestSeq + 1 }),
+            pull.filter(data =>  {
+                return (data.value.content.type.indexOf("entity:" + this.namespace) != -1 &&
+                        data.value.author == self.myId);
+            })
+        );
+    },
+
+    onOwnEntityChange(type, id)
+    {
+        return pull(
+            this.onOwnTypeChange(type),
+            pull.filter(data => data.content.id == id)
+        );
+    },
+
+    onAllTypeChange(type)
     {
         return this.sbot.messagesByType({ live: true, type: this.getType(type), gt: this.latestTimestamp,
                                           fillCache: true, keys: false });
     },
 
-    onEntityChange(type, id)
+    onAllEntityChange(type, id)
     {
         return pull(
-            this.onTypeChange(type),
+            this.onAllTypeChange(type),
             pull.filter(data => data.content.id == id)
         );
     }

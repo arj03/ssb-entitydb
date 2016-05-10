@@ -66,8 +66,10 @@ them as a delete.
  - `db.getAllById()`
  - `db.getAll()`
  - `db.onChange()`
- - `db.onTypeChange()`
- - `db.onEntityChange()`
+ - `db.onAllTypeChange()`
+ - `db.onOwnTypeChange()`
+ - `db.onAllEntityChange()`
+ - `db.onOwnEntityChange()`
 
 ---
 
@@ -126,12 +128,24 @@ onTypeChange, onEntityChange.
 
 ---
 
-### db.onTypeChange(type)
+### db.onAllTypeChange(type)
 
-Returns a stream of changes on specific `type`
+Returns a stream of changes for all nodes on specific `type`.
 
 ---
 
-### db.onEntityChange(type, id)
+### db.onOwnTypeChange(type)
 
-Returns a stream of changes on specific `id` with `type`.
+Returns a stream of own changes on specific `type`.
+
+---
+
+### db.onAllEntityChange(type, id)
+
+Returns a stream of changes for all nodes on specific `id` with `type`.
+
+---
+
+### db.onOwnEntityChange(type, id)
+
+Returns a stream of own changes on specific `id` with `type`.

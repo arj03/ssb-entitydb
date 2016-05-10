@@ -24,7 +24,7 @@ tape('write', function (t) {
     var value = {b:3, c:1};
 
     pull(
-        db.onTypeChange("t"),
+        db.onAllTypeChange("t"),
         through(data => {
             t.deepEqual(data.content.values, value, "Got correct changes");
             done();
@@ -33,7 +33,25 @@ tape('write', function (t) {
     );
 
     pull(
-        db.onEntityChange("t", 1),
+        db.onOwnTypeChange("t"),
+        through(data => {
+            t.deepEqual(data.content.values, value, "Got correct changes");
+            done();
+        }),
+        pull.log() // don't swallow console.log
+    );
+
+    pull(
+        db.onAllEntityChange("t", 1),
+        through(data => {
+            t.deepEqual(data.content.values, value, "Got correct changes");
+            done();
+        }),
+        pull.log() // don't swallow console.log
+    );
+
+    pull(
+        db.onOwnEntityChange("t", 1),
         through(data => {
             t.deepEqual(data.content.values, value, "Got correct changes");
             done();
